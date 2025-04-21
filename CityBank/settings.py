@@ -81,16 +81,13 @@ env = environ.Env()
 environ.Env.read_env()
 
 # Your secret key
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = "django-insecure--z)rjf6dpub!c@x)-49br2qt9!*!e$73277jvub&@rq!^x+j(o"
+
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': env("DB_NAME"),
-        'USER': env("DB_USER"),
-        'PASSWORD': env("DB_PASSWORD"),
-        'HOST': env("DB_HOST"),
-        'PORT': env("DB_PORT"),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -148,3 +145,7 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = env("EMAIL")
 EMAIL_HOST_PASSWORD = env("EMAIL_PASSWORD")
+
+
+STORE_ID = 'cleve6084e47685c74'
+STORE_PASS = 'cleve6084e47685c74@ssl'

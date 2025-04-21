@@ -30,3 +30,4 @@ tzdata
 virtualenv
 wheel
 dj_database_url
+sslcommerz-lib

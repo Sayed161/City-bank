@@ -1,5 +1,5 @@
 from django import forms
-from .models import Transactions
+from .models import Transactions,UserBankAccount
 
 class TransactionForm(forms.ModelForm):
     class Meta:
@@ -15,7 +15,7 @@ class TransactionForm(forms.ModelForm):
     def save(self, commit = True):
         self.instance.account = self.account
         self.instance.balance_after_transaction = self.account.balance
-        return super().save()
+        return super().save(commit)
     
 class DepositForm(TransactionForm):
     def clean_amount(self): # amount field ke filter korbo

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 from django.db.models.query import QuerySet
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render,get_object_or_404,redirect
 from django.views.generic import CreateView,ListView,View
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -14,6 +14,11 @@ from django.template.loader import render_to_string
 from django.db.models import Sum
 from django.urls import reverse_lazy
 from accounts.models import UserBankAccount
+from sslcommerz_lib import SSLCOMMERZ
+from django.conf import settings
+from decimal import Decimal
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
 
 
@@ -39,7 +44,7 @@ class TransactionalMixin(LoginRequiredMixin, CreateView):
     def get_form_kwargs(self) :
         kwargs = super().get_form_kwargs()
         kwargs.update({
-            'account': self.request.user,
+            'account': self.request.user.accounts,
         })
         return kwargs
     
@@ -67,7 +72,7 @@ class DepositeMoneyView(TransactionalMixin):
         )
         messages.success(self.request,f"{amount}$ was deposited to your account successfully")
         
-        send_transaction_email(self.request.user, amount, "Deposite Message", "deposite_mail.html")
+        # send_transaction_email(self.request.user, amount, "Deposite Message", "deposite_mail.html")
         return super().form_valid(form)
     
 
@@ -89,7 +94,7 @@ class WithdrawMoneyView(TransactionalMixin):
                 update_fields = ['balance']
             )
             messages.success(self.request,f"{amount}$ was withdrawn from your account successfully")
-            send_transaction_email(self.request.user, amount, "Withdraw Message", "withdraw_mail.html")
+            # send_transaction_email(self.request.user, amount, "Withdraw Message", "withdraw_mail.html")
         else:
             messages.error(self.request,f"Bank has rupted you can't withdraw money")
         return super().form_valid(form)
@@ -176,7 +181,7 @@ class SentMoneyView(TransactionalMixin):
     title = "Sent Money"
 
     def get_initial(self):
-        initial = {'transactions_type':SENT_MONEY}
+        initial = {'transactions_type': SENT_MONEY}
         return initial
     
     def form_valid(self, form):
@@ -187,20 +192,61 @@ class SentMoneyView(TransactionalMixin):
         try:
             reciver_account = UserBankAccount.objects.get(account_no=reciver_ac)
         except UserBankAccount.DoesNotExist:
-            return HttpResponse("Reciver account not found")
+            return HttpResponse("Receiver account not found")
         
         if user_account.balance >= amount:
-                user_account.balance -= amount
-                user_account.save(
-                update_fields = ['balance']
-                )
+            user_account.balance -= amount
+            user_account.save(update_fields=['balance'])
+            status_url = self.request.build_absolute_uri(reverse('status'))
+            reciver_account.balance += amount
+            reciver_account.save(update_fields=['balance'])
+            Settings = { 'store_id': settings.STORE_ID, 'store_pass': settings.STORE_PASS, 'issandbox': True }
+            sslcommez = SSLCOMMERZ(Settings)
+            post_body = {}
+            post_body['total_amount'] = amount
+            post_body['currency'] = "BDT"
+            post_body['tran_id'] = "12345"
+            post_body['success_url'] = status_url
+            post_body['fail_url'] = status_url
+            post_body['cancel_url'] =status_url
+            post_body['emi_option'] = 0
+            post_body['cus_name'] = "test"
+            post_body['cus_email'] = "test@test.com"
+            post_body['cus_phone'] = "01700000000"
+            post_body['cus_add1'] = "customer address"
+            post_body['cus_city'] = "Dhaka"
+            post_body['cus_country'] = "Bangladesh"
+            post_body['shipping_method'] = "NO"
+            post_body['multi_card_name'] = ""
+            post_body['num_of_item'] = 1
+            post_body['product_name'] = "Test"
+            post_body['product_category'] = "Test Category"
+            post_body['product_profile'] = "general"
 
-                reciver_account.balance += amount
-                reciver_account.save(
-                update_fields = ['balance']
-                )
 
-                messages.success(self.request,f"{amount} was sent to {reciver_ac} successfully")
-            
+            response = sslcommez.createSession(post_body)
+            if response.get('status') == 'SUCCESS':
+                return HttpResponseRedirect(response.get('GatewayPageURL'))  # Redirect to payment gateway
+            else:
+                messages.error(self.request, "Failed to create payment session")
+
+            messages.success(self.request, f"{amount} was sent to {reciver_ac} successfully")
         else:
-                messages.error(self.request,"you don't have sufficient balance to send")
+            messages.error(self.request, "You don't have sufficient balance to send")
+
+        # Make sure to return a valid HttpResponse
+        return super().form_valid(form)
+    
+@csrf_exempt
+def sslc_status(request):
+    if request.method == 'POST':
+        payment_data = request.POST
+        status = payment_data['status']
+        if status == 'VALID':
+            val_id=payment_data['val_id']
+            tran_id=payment_data['tran_id']
+            return HttpResponseRedirect(reverse('complete',kwargs={'val_id':val_id, 'tran_id':tran_id}))
+    return render(request, 'status.html')
+
+def sslc_complete(request, val_id,tran_id):
+    return HttpResponseRedirect(reverse('home'))

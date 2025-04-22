@@ -94,7 +94,6 @@ class WithdrawMoneyView(TransactionalMixin):
                 update_fields = ['balance']
             )
             messages.success(self.request,f"{amount}$ was withdrawn from your account successfully")
-            # send_transaction_email(self.request.user, amount, "Withdraw Message", "withdraw_mail.html")
         else:
             messages.error(self.request,f"Bank has rupted you can't withdraw money")
         return super().form_valid(form)
@@ -239,14 +238,17 @@ class SentMoneyView(TransactionalMixin):
     
 @csrf_exempt
 def sslc_status(request):
-    if request.method == 'POST':
-        payment_data = request.POST
-        status = payment_data['status']
-        if status == 'VALID':
-            val_id=payment_data['val_id']
-            tran_id=payment_data['tran_id']
-            return HttpResponseRedirect(reverse('complete',kwargs={'val_id':val_id, 'tran_id':tran_id}))
+    data = request.POST or request.GET
+    status = data.get('status')
+    
+    if status == 'VALID':
+        val_id = data.get('val_id')
+        tran_id = data.get('tran_id')
+        messages.success(request, f"Payment of {data.get('amount')} BDT was successful")
+        return HttpResponseRedirect(reverse('complete', kwargs={'val_id': val_id, 'tran_id': tran_id}))
+
     return render(request, 'status.html')
+
 
 def sslc_complete(request, val_id,tran_id):
     return HttpResponseRedirect(reverse('home'))

@@ -13,16 +13,7 @@ class UserBankAccount(models.Model):
     initial_deposit_date = models.DateTimeField(auto_now_add=True)
     balance = models.DecimalField(default=0,max_digits=12,decimal_places=2)
     bank_rupt = models.BooleanField(default=False)
-
+    street_address = models.CharField(max_length=255,null=True)
     def __str__(self) -> str:
         return str(self.account_no)
 
-class UserAddress(models.Model):
-    user = models.OneToOneField(User, related_name='address', on_delete=models.CASCADE)
-    street_address = models.CharField(max_length=255)
-    city = models.CharField(max_length=155)
-    postal = models.IntegerField()
-    country = models.CharField(max_length=155)
-
-    def __str__(self) -> str:
-        return self.city

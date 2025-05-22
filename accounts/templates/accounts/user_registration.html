@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load widget_tweaks %}
 {% block title %}Register | City Bank{% endblock %}
 {% block body %}
 
@@ -55,7 +56,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Username -->
                             <div>
-                                <label for="username" class="block text-sm font-medium text-gray-700">
+                                <label for="username" class="block text-sm font-medium text-gray-700" >
                                     {{ form.username.label }}
                                 </label>
                                 <div class="mt-1 relative rounded-md shadow-sm">
@@ -66,7 +67,7 @@
                                     </div>
                                     <input id="username" name="{{ form.username.name }}" type="text" required
                                            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                           placeholder="Choose a username">
+                                           placeholder="Choose a username" autocomplete="username" >
                                 </div>
                                 {% if form.username.errors %}
                                     {% for error in form.username.errors %}
@@ -254,59 +255,6 @@
                                 {% endif %}
                             </div>
 
-                            <!-- City -->
-                            <div>
-                                <label for="city" class="block text-sm font-medium text-gray-700">
-                                    {{ form.city.label }}
-                                </label>
-                                <input id="city" name="{{ form.city.name }}" type="text" required
-                                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                       placeholder="City">
-                                {% if form.city.errors %}
-                                    {% for error in form.city.errors %}
-                                    <p class="mt-2 text-sm text-red-600">{{ error }}</p>
-                                    {% endfor %}
-                                {% endif %}
-                            </div>
-
-                            <!-- Postal Code -->
-                            <div>
-                                <label for="postal" class="block text-sm font-medium text-gray-700">
-                                    {{ form.postal.label }}
-                                </label>
-                                <input id="postal" name="{{ form.postal.name }}" type="text" required
-                                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                       placeholder="Postal code">
-                                {% if form.postal.errors %}
-                                    {% for error in form.postal.errors %}
-                                    <p class="mt-2 text-sm text-red-600">{{ error }}</p>
-                                    {% endfor %}
-                                {% endif %}
-                            </div>
-
-                            <!-- Country -->
-                            <div>
-                                <label for="country" class="block text-sm font-medium text-gray-700">
-                                    {{ form.country.label }}
-                                </label>
-                                <input id="country" name="{{ form.country.name }}" type="text" required
-                                       class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                       placeholder="Start typing your country..."
-                                       list="countryOptions"
-                                       autocomplete="off">
-                                
-                                <datalist id="countryOptions">
-                                    {% for choice in form.country.field.choices %}
-                                        <option value="{{ choice.1 }}">{{ choice.1 }}</option>
-                                    {% endfor %}
-                                </datalist>
-                                
-                                {% if form.country.errors %}
-                                    {% for error in form.country.errors %}
-                                    <p class="mt-2 text-sm text-red-600">{{ error }}</p>
-                                    {% endfor %}
-                                {% endif %}
-                            </div>
                         </div>
                     </div>
 
